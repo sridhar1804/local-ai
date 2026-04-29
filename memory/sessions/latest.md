@@ -1,0 +1,60 @@
+# Latest Session Handoff
+
+## Session: 2026-04-28 (Build Session)
+
+### What Was Done
+
+**Phase 1 POC — fully implemented and verified.**
+
+**Environment audit:**
+- NVIDIA RTX 3090, 24 GB VRAM, Driver 596.21, CUDA 13.2
+- PyTorch 2.10.0+cu128, vLLM 0.19.1
+- All packages installed inside `/home/ubuntu/ai/` venv (fully isolated)
+- Model weights cached: Phi-3-mini-4k-instruct (7.2 GB), Mistral-7B-Instruct-v0.2
+
+**Code written (11 files):**
+- `memory/trace.py` — Pydantic Trace schema v1.0.0 with GenerationRecord, ValidationRecord, FallbackRecord
+- `memory/sink.py` — TraceSink Protocol, JsonlTraceSink (daily-rotated, threadsafe), NullSink
+- `models/client.py` — Phi3Client thin HTTP wrapper around vLLM OpenAI-compatible API
+- `models/server.sh` — vLLM launch script with v0.19.1 flags
+- `agents/main_agent.py` — Single handler with SYSTEM_PROMPT, AgentResult dataclass
+- `agents/router.py` — RouteDecision placeholder (always main_agent)
+- `main.py` + `__main__.py` — Entry point with canonical control flow, finally-guaranteed tracing
+- `pyproject.toml`, `.env.example`, `README.md`
+- `start_vllm.sh` — Launcher with auto-ready detection
+- `benchmark.sh` — Throughput benchmark script
+
+**Verification results:**
+- vLLM server starts and serves Phi-3 Mini 4K on port 8000
+- Benchmark: **83.3 tok/s** (clears 80 tok/s floor)
+- Happy path: `python -m main "What is the capital of France?"` → "The capital of France is Paris."
+- Error path: stopped vLLM → non-zero exit + trace with `error` populated, `decision_path` ending in `"error"`
+- JSONL traces validated: schema_version 1.0.0, all required fields present, reserved fields at defaults
+
+### v1.md Spec Adjustments (vLLM 0.6.x → 0.19.1)
+
+| v1.md Spec | Actual |
+|---|---|
+| `python -m vllm.entrypoints.openai.api_server` | `vllm serve` |
+| `--disable-log-requests` | `--disable-uvicorn-access-log` |
+| `gpu_memory_utilization: 0.85` | Same flag, default now 0.9 |
+
+### State of the Codebase
+
+All modules import correctly. `python -m main "<query>"` works end-to-end. vLLM server running on port 8000.
+
+### Open Threads
+
+- Phi-3 Mini responses are sometimes inconsistent with the system prompt (e.g., confused responses to simple questions). This is a model quirk, not a code bug. Consider adjusting SYSTEM_PROMPT or switching to a different model in Phase 2.
+- vLLM background process management through WSL/PowerShell bridge is fragile. Recommend starting vLLM in a dedicated WSL terminal.
+- Write tool writes to Windows-side path (`\\wsl.localhost\...`) which resolves to `C:\home\...`. For WSL filesystem writes, use `wsl bash -c 'cat > file <<EOF'` pattern or the `\\wsl.localhost\Ubuntu-24.04\...` path with Write tool.
+
+### Decisions Made
+
+- Project code lives at `/home/ubuntu/ai/code/` (subdirectory of the venv at `/home/ubuntu/ai/`)
+- Venv is NOT inside the project directory — it IS the parent directory
+- Traces go to `logs/traces/<UTC-date>.jsonl` relative to project root
+- All reserved fields present in v1.0.0 schema for forward compatibility
+
+---
+_Next session: read INDEX.md first, then the files it lists. vLLM server should be running — run `bash start_vllm.sh` if not._
