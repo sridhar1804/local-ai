@@ -6,8 +6,8 @@ import sys
 
 from agents.main_agent import run as agent_run
 from agents.router import route as router_route
-from memory.sink import JsonlTraceSink
-from memory.trace import GenerationRecord, Trace
+from model_memory.sink import JsonlTraceSink
+from model_memory.trace import GenerationRecord, Trace
 from models.client import Phi3Client
 
 

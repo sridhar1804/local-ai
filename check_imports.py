@@ -3,8 +3,8 @@
 import sys
 sys.path.insert(0, "/home/ubuntu/ai/code")
 
-from memory.trace import Trace, GenerationRecord, ValidationRecord, FallbackRecord, SCHEMA_VERSION
-from memory.sink import NullSink, JsonlTraceSink
+from model_memory.trace import Trace, GenerationRecord, ValidationRecord, FallbackRecord, SCHEMA_VERSION
+from model_memory.sink import NullSink, JsonlTraceSink
 from models.client import Phi3Client, GenerationResult
 from agents.main_agent import SYSTEM_PROMPT, run as agent_run
 from agents.router import route

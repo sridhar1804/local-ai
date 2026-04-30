@@ -2,6 +2,8 @@
 
 >applies to ALL work in this repo from this point forward.
 
+> **Coding Style is non-negotiable.** Every file authored or edited in this repo MUST conform to [code_style.md](code_style.md). Read it at session start alongside this file. If a request conflicts with the style guide, raise the conflict before writing code.
+
 ---
 
 ## 1. Plan Mode (Default)
@@ -20,10 +22,10 @@
 
 ## 3. Self-Improvement Loop
 
-- After ANY correction from the user, update `tasks/lessons.md` with the pattern
+- After ANY correction from the user, update `.claude/tasks/lessons.md` with the pattern
 - Write rules to prevent the same mistakes
 - Ruthlessly iterate on these lessons until mistake rate drops
-- Review `tasks/lessons.md` at session start for the relevant project
+- Review `.claude/tasks/lessons.md` at session start for the relevant project
 
 ## 4. Verification Before Completion
 
@@ -65,12 +67,20 @@ Time is not an excuse. Fatigue is not an excuse. Complexity is not an excuse. Bo
 
 ## Task Management Protocol
 
-1. **Plan First** — Write plan to `tasks/todo.md` with checkable items
+1. **Plan First** — Write plan to `.claude/tasks/todo.md` with checkable items
 2. **Verify Plan** — Check in before starting implementation
 3. **Track Progress** — Mark items complete as you go
 4. **Explain Changes** — High-level summary at each step
-5. **Document Results** — Add review section to `tasks/todo.md`
-6. **Capture Lessons** — Update `tasks/lessons.md` after corrections
+5. **Document Results** — Add review section to `.claude/tasks/todo.md`
+6. **Capture Lessons** — Update `.claude/tasks/lessons.md` after corrections
+
+## Session Logging Protocol
+
+- **One file per session.** At session end, write a new file at `.claude/memory/sessions/YYYY-MM-DD[-suffix].md`. Use today's date; add a short suffix (`-build`, `-bugfix`, `-restructure`, etc.) if multiple sessions occur in one day.
+- **Never overwrite** a prior session's file. The directory is an append-only history.
+- **Use the standard skeleton** (see `CLAUDE.md` → Session File Format): What Was Done, Decisions Made, Files Changed, New Files, Files Moved / Deleted, Build & Test Results, Open Threads, Next Session.
+- **Read the most recent file** at session start to pick up where the previous session left off.
+- **Corrections to past sessions** belong in the current session's file, not by editing history.
 
 ---
 
@@ -81,3 +91,4 @@ Time is not an excuse. Fatigue is not an excuse. Complexity is not an excuse. Bo
 - **Minimal Impact** — Changes should only touch what's necessary. Avoid introducing bugs.
 - **Memory management** : Update the memory files after every session with what youve learnt.
 - **Claude updates** : Keep the claude.md file updates with the most up-to-date information
+- **Coding Style** : All code authored or edited in this repo MUST follow [code_style.md](code_style.md) — naming, function shape, type hints, error handling, docstrings, imports, classes, configuration, logging, testing, formatting, and trade-offs. The fingerprint at the bottom of that file is the bar.

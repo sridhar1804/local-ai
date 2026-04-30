@@ -4,11 +4,12 @@
 
 Python framework for building AI agents. Currently implementing Phase 1 POC — single-GPU Phi-3 Mini 4K inference with vLLM, structured tracing, and agent harness.
 
-Three core packages:
+Four top-level packages:
 
 - `models/` — LLM client abstractions (`client.py` for vLLM HTTP wrapper)
 - `agents/` — Agent implementations (`main_agent.py`, `router.py`)
-- `memory/` — Trace schema (`trace.py`) and persistence layer (`sink.py`)
+- `model_memory/` — Trace schema (`trace.py`) and persistence layer (`sink.py`) — runtime memory the model writes to
+- `.claude/memory/` — Agent-readable/writable knowledge base (rules, coding style, project context, sessions, lessons, user profile) — Markdown only, no code. Companion dirs: `.claude/tasks/` (todo + lessons), `.claude/versions/` (versioned design specs).
 
 ## Current State
 
@@ -17,7 +18,7 @@ Three core packages:
 Key files:
 - `main.py` — entry point with canonical control flow
 - `models/server.sh` — vLLM launch script
-- `memory/trace.py` — Trace schema v1.0.0
+- `model_memory/trace.py` — Trace schema v1.0.0
 - `agents/main_agent.py` — single handler
 
 ## Environment
@@ -35,7 +36,7 @@ Key files:
 
 ## Key Decisions Made
 
-1. **Trace-first design**: `memory/trace.py` anchors the observability substrate. Reserved fields (`retrieval`, `tool_calls`, `validation`, `fallback`) present in v1.0.0 even though unused.
+1. **Trace-first design**: `model_memory/trace.py` anchors the observability substrate. Reserved fields (`retrieval`, `tool_calls`, `validation`, `fallback`) present in v1.0.0 even though unused.
 2. **Protocol over ABC**: TraceSink uses structural typing.
 3. **Router placeholder**: Built in Phase 1 to avoid refactoring `main.py` in Phase 2.
 4. **Venv-as-parent**: The venv (`/home/ubuntu/ai/`) is the parent of the project directory (`/home/ubuntu/ai/code/`).

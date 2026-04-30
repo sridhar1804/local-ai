@@ -57,9 +57,12 @@ agents/
 models/
   client.py      → Phi3Client: thin vLLM HTTP wrapper
   server.sh      → vLLM launch script
-memory/
+model_memory/
   trace.py       → Pydantic Trace schema v1.0.0
   sink.py        → JsonlTraceSink (daily-rotated JSONL), NullSink
+.claude/memory/
+  INDEX.md, workflow/, project/, sessions/, lessons/, user/
+                 → agent (Claude) knowledge base, Markdown only
 ```
 
 ## Trace Schema
@@ -122,10 +125,23 @@ ai/code/
 │   ├── __init__.py
 │   ├── client.py
 │   └── server.sh
-├── memory/
+├── model_memory/
 │   ├── __init__.py
 │   ├── trace.py
 │   └── sink.py
+├── .claude/
+│   ├── settings.json
+│   ├── commands/
+│   ├── agents/
+│   ├── memory/
+│   │   ├── INDEX.md
+│   │   ├── workflow/   (rules.md, code_style.md)
+│   │   ├── project/    (context.md)
+│   │   ├── sessions/   (latest.md)
+│   │   ├── lessons/    (patterns.md)
+│   │   └── user/       (profile.md)
+│   ├── tasks/      (todo.md, lessons.md)
+│   └── versions/   (v1.md, v2.md, ...)
 └── logs/
     └── traces/
         └── YYYY-MM-DD.jsonl
