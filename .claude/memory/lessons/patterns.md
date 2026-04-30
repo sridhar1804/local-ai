@@ -18,5 +18,10 @@
 - **Check file locations after Write tool**: Always run `wsl bash -c 'ls -la <path>'` to verify files landed in WSL, not on the Windows C: drive.
 - **Version audit before implementation**: Check actual installed versions against spec. v1.md targeted vLLM 0.6.x but 0.19.1 is installed — flags differ. Audit first, code second.
 
+## New Patterns Added This Session (2026-04-30)
+
+- **Comprehensive file rewrite vs incremental edits**: When applying 10+ style fixes to a file (docstrings, logging, imports, formatting), rewriting the entire file with Write tool produces cleaner results than chaining Edit calls.
+- **dynaconf setup pattern**: Create `settings.toml` with defaults, optional `.secrets.toml` (gitignored), and a `config.py` that exports module-level constants accessed by other modules. Use `Dynaconf(settings_files=[...])` without `environments=True` unless multi-env is needed.
+
 ---
-_Last updated: 2026-04-28_
+_Last updated: 2026-04-30_

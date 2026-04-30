@@ -1,7 +1,12 @@
-"""Entry point — canonical control flow for Phase 1."""
+"""Entry point — canonical control flow for Phase 1.
+
+Parses the query from argv, composes router → agent → trace, prints the output,
+and writes one JSONL trace. Failed calls still produce a trace with error data.
+"""
 
 from __future__ import annotations
 
+import logging
 import sys
 
 from agents.main_agent import run as agent_run
@@ -10,9 +15,30 @@ from model_memory.sink import JsonlTraceSink
 from model_memory.trace import GenerationRecord, Trace
 from models.client import Phi3Client
 
+_logger = logging.getLogger(__name__)
+
 
 def handle(query: str, client: Phi3Client, sink: JsonlTraceSink) -> str:
+    """Compose the router, agent, and trace into the canonical control flow.
+
+    On success the model completion is returned. On failure the exception
+    is captured into the trace (written in finally) and re-raised.
+
+    Args:
+        query: The user's input query.
+        client: An initialized Phi3Client for model calls.
+        sink: A TraceSink for persisting the trace.
+
+    Returns:
+        The model's completion string.
+
+    Raises:
+        ValueError: If the router returns an unknown route.
+        Exception: Any exception from the agent or model call is re-raised.
+    """
     trace = Trace(input_query=query)
+    output: str
+
     try:
         trace.decision_path.append("router.route")
         decision = router_route(query)
@@ -33,25 +59,36 @@ def handle(query: str, client: Phi3Client, sink: JsonlTraceSink) -> str:
             )
             trace.final_output = result.output
             trace.decision_path.append("done")
-            return result.output
+            output = result.output
         else:
             raise ValueError(f"Unknown route: {decision.route}")
     except Exception as exc:
+        _logger.error("Request failed", exc_info=True)
         trace.capture_exception(exc)
         trace.decision_path.append("error")
         raise
+    else:
+        _logger.info("Request completed", extra={"trace_id": trace.trace_id})
     finally:
         sink.write(trace)
 
+    return output
+
 
 def main() -> None:
+    """Parse CLI arguments and run the agent pipeline.
+
+    Prints the completion to stdout on success, writes a trace regardless.
+    Exits with code 2 if no query is provided.
+    """
     if len(sys.argv) < 2:
-        print("Usage: python -m main <query>", file=sys.stderr)
+        _logger.warning("Usage: python -m main <query>")
         sys.exit(2)
 
     query = " ".join(sys.argv[1:])
     client = Phi3Client()
     sink = JsonlTraceSink()
+
     try:
         output = handle(query, client, sink)
         print(output)

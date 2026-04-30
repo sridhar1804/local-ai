@@ -1,0 +1,5 @@
+base_url = "http://localhost:8000/v1"
+model = "microsoft/Phi-3-mini-4k-instruct"
+timeout = 60.0
+log_dir = "logs/traces"
+log_level = "INFO"

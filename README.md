@@ -50,19 +50,32 @@ cat logs/traces/$(date -u +%Y-%m-%d).jsonl | python3 -m json.tool
 ## Architecture
 
 ```
-main.py          → entry point, canonical control flow
+config.py         → centralized dynaconf settings + structured JSON logging
+main.py           → entry point, canonical control flow
 agents/
-  router.py      → RouteDecision placeholder (always main_agent)
-  main_agent.py  → single handler, prompt assembly + model call
+  router.py       → RouteDecision placeholder (always main_agent)
+  main_agent.py   → single handler, prompt assembly + model call
 models/
-  client.py      → Phi3Client: thin vLLM HTTP wrapper
-  server.sh      → vLLM launch script
+  client.py       → Phi3Client: thin vLLM HTTP wrapper
+  server.sh       → vLLM launch script
 model_memory/
-  trace.py       → Pydantic Trace schema v1.0.0
-  sink.py        → JsonlTraceSink (daily-rotated JSONL), NullSink
+  trace.py        → Pydantic Trace schema v1.0.0
+  sink.py         → JsonlTraceSink (daily-rotated JSONL), NullSink
+tests/
+  conftest.py, test_*.py
+                  → 58 pytest tests (full pipeline coverage)
 .claude/memory/
   INDEX.md, workflow/, project/, sessions/, lessons/, user/
-                 → agent (Claude) knowledge base, Markdown only
+                  → agent (Claude) knowledge base, Markdown only
+```
+
+## Configuration
+
+All runtime settings are in `config.py`, sourced from `settings.toml` (committed)
+and `.secrets.toml` (gitignored). Import from `config`:
+
+```python
+from config import BASE_URL, MODEL, TIMEOUT, LOG_DIR
 ```
 
 ## Trace Schema
@@ -88,16 +101,25 @@ bash benchmark.sh
 
 Target: >= 80 tok/s single-stream on a 300-token completion.
 
-## Environment Variables
+## Testing
 
-Copy `.env.example` to `.env` and adjust:
+```bash
+python -m pytest tests/ -v
+```
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MODEL_NAME` | `microsoft/Phi-3-mini-4k-instruct` | HuggingFace model ID |
-| `VLLM_PORT` | `8000` | vLLM server port |
-| `GPU_UTIL` | `0.85` | GPU memory utilization fraction |
-| `LOG_DIR` | `logs/traces` | Trace output directory |
+58 tests covering: trace schema, sinks, client, agent, router, main control flow, and integration.
+
+## Settings
+
+Edit `settings.toml` to change defaults:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `base_url` | `http://localhost:8000/v1` | vLLM server URL |
+| `model` | `microsoft/Phi-3-mini-4k-instruct` | HuggingFace model ID |
+| `timeout` | `60.0` | HTTP timeout in seconds |
+| `log_dir` | `logs/traces` | Trace output directory |
+| `log_level` | `INFO` | Logging level (DEBUG/INFO/WARNING/ERROR) |
 
 ## Stopping
 
@@ -111,8 +133,9 @@ kill $(cat logs/vllm.pid)
 ai/code/
 ├── main.py
 ├── __main__.py
+├── config.py
 ├── pyproject.toml
-├── .env.example
+├── settings.toml
 ├── pinned_versions.txt
 ├── start_vllm.sh
 ├── benchmark.sh
@@ -129,6 +152,16 @@ ai/code/
 │   ├── __init__.py
 │   ├── trace.py
 │   └── sink.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_trace.py
+│   ├── test_sink.py
+│   ├── test_client.py
+│   ├── test_agent.py
+│   ├── test_router.py
+│   ├── test_main.py
+│   └── test_integration.py
 ├── .claude/
 │   ├── settings.json
 │   ├── commands/
@@ -137,7 +170,7 @@ ai/code/
 │   │   ├── INDEX.md
 │   │   ├── workflow/   (rules.md, code_style.md)
 │   │   ├── project/    (context.md)
-│   │   ├── sessions/   (latest.md)
+│   │   ├── sessions/   (YYYY-MM-DD[-suffix].md)
 │   │   ├── lessons/    (patterns.md)
 │   │   └── user/       (profile.md)
 │   ├── tasks/      (todo.md, lessons.md)

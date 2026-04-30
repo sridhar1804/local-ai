@@ -13,13 +13,18 @@ Four top-level packages:
 
 ## Current State
 
-**Phase 1 complete.** `python -m main "<query>"` returns completions via vLLM, writes JSONL traces with full schema. Benchmark: 83.3 tok/s on RTX 3090.
+**Phase 1 complete — code style compliant.** `python -m main "<query>"` returns completions via vLLM, writes JSONL traces with full schema. Benchmark: 83.3 tok/s on RTX 3090. 58 pytest tests pass.
 
 Key files:
-- `main.py` — entry point with canonical control flow
+- `main.py` — entry point with canonical control flow, structured JSON logging
+- `config.py` — centralized configuration via dynaconf (settings.toml + .secrets.toml)
+- `models/client.py` — Phi3Client thin vLLM HTTP wrapper
 - `models/server.sh` — vLLM launch script
 - `model_memory/trace.py` — Trace schema v1.0.0
-- `agents/main_agent.py` — single handler
+- `model_memory/sink.py` — JsonlTraceSink (daily-rotated), NullSink, TraceSink Protocol
+- `agents/main_agent.py` — single handler with SYSTEM_PROMPT
+- `agents/router.py` — RouteDecision placeholder
+- `tests/` — 58 pytest tests (7 test files, full coverage of the pipeline)
 
 ## Environment
 
@@ -37,9 +42,12 @@ Key files:
 ## Key Decisions Made
 
 1. **Trace-first design**: `model_memory/trace.py` anchors the observability substrate. Reserved fields (`retrieval`, `tool_calls`, `validation`, `fallback`) present in v1.0.0 even though unused.
-2. **Protocol over ABC**: TraceSink uses structural typing.
+2. **Protocol over ABC**: TraceSink uses structural typing (`@runtime_checkable`).
 3. **Router placeholder**: Built in Phase 1 to avoid refactoring `main.py` in Phase 2.
 4. **Venv-as-parent**: The venv (`/home/ubuntu/ai/`) is the parent of the project directory (`/home/ubuntu/ai/code/`).
+5. **dynaconf for config**: Centralized in `config.py` → `settings.toml`. Module-level constants (`BASE_URL`, `MODEL`, `TIMEOUT`, `LOG_DIR`) imported by other modules. No scattered `os.environ` reads.
+6. **Structured JSON logging**: Root logger configured in `config.py` with `_JsonFormatter`. All modules use `logging.getLogger(__name__)`.
+7. **Google-style docstrings**: Every module, class, and function has a docstring (≤5 lines) per code_style.md.
 
 ---
-_Last updated: 2026-04-28 (Phase 1 complete)_
+_Last updated: 2026-04-30 (code style compliance + test suite)_
